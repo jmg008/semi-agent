@@ -56,41 +56,5 @@ class Agent:
             raise ValueError("Provider response is not valid JSON") from exc
 
     def call_tool(self, tool_name, arg):
-        if tool_name not in TOOLS:
-            raise ValueError(f"Unknown tool: {tool_name}")
-        return TOOLS[tool_name](arg)
 
     def run(self):
-        while True:
-            print("==step==")
-            response = self.provider.generate(list(self.messages))
-            parsed = self.parse_response(response)
-
-            self.messages.append({"role": "assistant", "content": response})
-            print(parsed["message"])
-
-            if parsed["type"] == "tool_call":
-                tool_name = parsed["tool"]
-                print(parsed["args"])
-                result = self.call_tool(tool_name, parsed["args"])
-                self.messages.append(
-                    {
-                        "role": "user",
-                        "content": (
-                            "도구 실행 결과:\n"
-                            + json.dumps(
-                                {
-                                    "tool": tool_name,
-                                    "result": result,
-                                },
-                                ensure_ascii=False,
-                            )
-                        ),
-                    }
-                )
-                continue
-
-            if parsed["type"] == "final":
-                return parsed.get("content", parsed.get("answer", parsed["message"]))
-
-            raise ValueError(f"Unknown response type: {parsed['type']}")
